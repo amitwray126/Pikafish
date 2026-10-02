@@ -79,13 +79,12 @@ int correction_value(const Worker& w, const Position& pos, const Stack* const ss
     const int   bnpcv  = shared.nonpawn_correction_entry<BLACK>(pos)[us].nonPawnBlack;
     const int   cntcv =
       m.is_ok()
-        ? 8006
+        ? 8895
               * ((*(ss - 2)->continuationCorrectionHistory)[pos.piece_on(m.to_sq())][m.to_sq()]
                  + (*(ss - 4)->continuationCorrectionHistory)[pos.piece_on(m.to_sq())][m.to_sq()])
-            + 6403 * (*(ss - 6)->continuationCorrectionHistory)[pos.piece_on(m.to_sq())][m.to_sq()]
-        : 90287;
+        : 71662;
 
-    return 4136 * pcv + 3448 * micv + 7512 * (wnpcv + bnpcv) + cntcv;
+    return 4596 * pcv + 3831 * micv + 8347 * (wnpcv + bnpcv) + cntcv;
 }
 
 // Add correctionHistory value to raw staticEval and guarantee evaluation
@@ -115,7 +114,6 @@ void update_correction_history(const Position& pos,
         const Piece  pc = pos.piece_on(to);
         (*(ss - 2)->continuationCorrectionHistory)[pc][to] << bonus * 131 / 128;
         (*(ss - 4)->continuationCorrectionHistory)[pc][to] << bonus * 63 / 128;
-        (*(ss - 6)->continuationCorrectionHistory)[pc][to] << bonus * 35 / 128;
     }
 }
 
@@ -697,8 +695,7 @@ Value Search::Worker::search(
 
     assert(rootDepth);
     // Do not tune these values. They are not intended for playing strength.
-    const bool seekMate =
-      std::abs(rootMoves[pvIdx].score) >= 750 + 220000 / (rootDepth * rootDepth);
+    const bool seekMate = std::abs(rootMoves[pvIdx].score) >= 2000;
 
     // Dive into quiescence search when the depth reaches zero
     if (depth <= 0)
@@ -875,7 +872,7 @@ Value Search::Worker::search(
 
             // Partial workaround for the graph history interaction problem.
             // For high rule60 counts don't produce transposition table cutoffs.
-            if (pos.rule60_count() < 116)
+            if (pos.rule60_count() < MaxPly - 4)
             {
                 if (depth >= 7 && ttData.move && pos.pseudo_legal(ttData.move)
                     && pos.legal(ttData.move) && !is_decisive(ttData.value))
